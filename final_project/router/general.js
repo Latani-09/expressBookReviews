@@ -7,7 +7,21 @@ const public_users = express.Router();
 
 public_users.post("/register", (req,res) => {
   //Write your code here
-  return res.status(300).json({message: "Yet to be implemented"});
+  const username=req.body.username;
+  const password=req.body.password;
+  if (!username||!password){
+      return res.status(400).json("provide password and username in body as json input");
+  }
+  const usernames = users.map(user => user.username);
+  console.log(usernames)
+  if (usernames.includes(username)){
+  return res.status(409).json({message: "username already taken. try a different one"});}
+  const user={
+      "username":username,
+      "password":password
+  };
+  users.push(user);
+  return res.send( `user registered with username ${username} `);
 });
 
 // Get the book list available in the shop
@@ -28,9 +42,8 @@ public_users.get('/isbn/:isbn', function (req, res) {
 // Get book details based on author
 public_users.get('/author/:author', function (req, res) {
     const author = req.params.author;
-    const books_current_author = [];
-    const isbnList = Object.keys(books);
-    console.log(isbnList)
+    let books_current_author=[]
+    isbnList=Object.keys(books);
     for (const id of isbnList) {
       const book = books[id];
       console.log(book.author)
@@ -38,11 +51,6 @@ public_users.get('/author/:author', function (req, res) {
         books_current_author.push(book);
       }
     }
-  
-    const numberOfBooks = books_current_author.length;
-    console.log(`Number of books by ${author}: ${numberOfBooks}`);
-    console.log('List of books:', books_current_author);
-  
     // You can send the books_current_author array as a JSON response
     res.send(books_current_author);
   });
@@ -50,15 +58,29 @@ public_users.get('/author/:author', function (req, res) {
 
 
 // Get all books based on title
-public_users.get('/title/:title',function (req, res) {
-  //Write your code here
-  return res.status(300).json({message: "Yet to be implemented"});
-});
+public_users.get('/title/:title', function (req, res) {
+    const title = req.params.title;
+    isbnList=Object.keys(books);
+    let books_title=[]
+    for (const id of isbnList) {
+      const book = books[id];
+      if (book.title === title) {
+        books_title.push(book);
+      }
+    }
+    // You can send the books_current_author array as a JSON response
+    res.send(books_title);
+  });
 
 //  Get book review
 public_users.get('/review/:isbn',function (req, res) {
-  //Write your code here
-  return res.status(300).json({message: "Yet to be implemented"});
-});
+    const isbn = req.params.isbn;
+    const book = books[isbn];
+    if (book) {
+      return res.send(book.reviews);
+    } else {
+      return res.status(404).send('Book not found');
+    }
+  });
 
 module.exports.general = public_users;
