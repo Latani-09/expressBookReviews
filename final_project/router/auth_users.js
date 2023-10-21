@@ -3,8 +3,7 @@ const jwt = require('jsonwebtoken');
 let books = require("./booksdb.js");
 const regd_users = express.Router();
 
-let users = [     { "username":"username",
-"password":"password"},];
+let users = [];
 
 const isValid = (username) => {
     if (!username) {
@@ -55,8 +54,19 @@ regd_users.put("/auth/review/:isbn", (req, res) => {
   const username=req.session.authorization.username;
   book.reviews[username]=req.body.review
   
-  return res.status(200).send(book.reviews)
+  return res.status(200).send(`${username}'s review for book with bookno ${isbn} is updated`)
 });
+
+regd_users.delete("/auth/review/:isbn", (req, res) => {
+    //Write your code here
+    const isbn = req.params.isbn;
+    const book = books[isbn];
+    const username=req.session.authorization.username;
+    delete(book.reviews[username])
+    
+    return res.status(200).send(`${username}'s review for book with book no ${isbn} is deleted`)
+  });
+  
 
 module.exports.authenticated = regd_users;
 module.exports.isValid = isValid;
