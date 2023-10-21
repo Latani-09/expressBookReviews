@@ -1,4 +1,4 @@
-const express = require('express');
+const express =require( 'express');
 let books = require("./booksdb.js");
 let isValid = require("./auth_users.js").isValid;
 let users = require("./auth_users.js").users;
@@ -23,15 +23,31 @@ public_users.post("/register", (req,res) => {
   users.push(user);
   return res.send( `user registered with username ${username} `);
 });
+function getBooks(){
+    return new Promise((resolve,reject)=>{
+        resolve(books);
+    });
+}
 
 // Get the book list available in the shop
-public_users.get('/',function (req, res) {
-  res.send(JSON.stringify(books))});
-
+public_users.get('/', async function (req, res) {
+    try {
+      const bks = await getBooks();
+      res.send(JSON.stringify(bks));
+    } catch (error) {
+      console.error(error);
+      res.status(500).send('Internal Server Error');
+    }
+  });
 // Get book details based on ISBN
-public_users.get('/isbn/:isbn', function (req, res) {
+function getbook_id(isbn){
+    return new Promise((resolve,reject)=>{
+        resolve(books[isbn]);
+    });
+}
+public_users.get('/isbn/:isbn', async function (req, res) {
     const isbn = req.params.isbn;
-    const book = books[isbn];
+    const book = await getbook_id(isbn);
     if (book) {
       return res.json(book);
     } else {
@@ -40,36 +56,43 @@ public_users.get('/isbn/:isbn', function (req, res) {
   });
   
 // Get book details based on author
-public_users.get('/author/:author', function (req, res) {
+function getbooks_author(author){
+    return new Promise((resolve,reject)=>{
+        let books_current_author=[]
+        isbnList=Object.keys(books);
+        for (const id of isbnList) {
+          const book = books[id];
+          console.log(book.author)
+          if (book.author === author) {
+            books_current_author.push(book);
+          }
+        }
+        resolve(books_current_author);
+    });
+}
+public_users.get('/author/:author', async function (req, res) {
     const author = req.params.author;
-    let books_current_author=[]
-    isbnList=Object.keys(books);
-    for (const id of isbnList) {
-      const book = books[id];
-      console.log(book.author)
-      if (book.author === author) {
-        books_current_author.push(book);
-      }
-    }
-    // You can send the books_current_author array as a JSON response
-    res.send(books_current_author);
+    res.send(await getbooks_author(author));
   });
   
-
-
-// Get all books based on title
-public_users.get('/title/:title', function (req, res) {
-    const title = req.params.title;
-    isbnList=Object.keys(books);
+  function getbooks_title(title){
+    return new Promise((resolve,reject)=>{
+    isbnList= Object.keys(books);
     let books_title=[]
     for (const id of isbnList) {
-      const book = books[id];
-      if (book.title === title) {
+    const book = books[id];
+    if (book.title === title) {
         books_title.push(book);
-      }
     }
-    // You can send the books_current_author array as a JSON response
-    res.send(books_title);
+    }
+        resolve(books_title);
+    });
+}
+
+// Get all books based on title
+public_users.get('/title/:title', async function (req, res) {
+    const title = req.params.title;
+    res.send(await getbooks_title(title));
   });
 
 //  Get book review
